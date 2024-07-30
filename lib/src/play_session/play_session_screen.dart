@@ -22,7 +22,7 @@ import '../style/confetti.dart';
 import '../style/palette.dart';
 
 class PlaySessionScreen extends StatefulWidget {
-  final GameLevel level;
+  final Team level;
 
   const PlaySessionScreen(this.level, {super.key});
 

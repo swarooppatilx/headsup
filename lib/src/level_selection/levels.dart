@@ -2,8 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-const gameLevels = [
-  GameLevel(
+const teams = [
+  Team(
     number: 1,
     difficulty: 5,
     // TODO: When ready, change these achievement IDs.
@@ -12,7 +12,7 @@ const gameLevels = [
     // You get this string when you configure an achievement in Play Console.
     achievementIdAndroid: 'NhkIwB69ejkMAOOLDb',
   ),
-  GameLevel(
+  Team(
     number: 2,
     difficulty: 100,
     achievementIdIOS: 'finished',
@@ -20,7 +20,7 @@ const gameLevels = [
   ),
 ];
 
-class GameLevel {
+class Team {
   final int number;
 
   final int difficulty;
@@ -32,7 +32,7 @@ class GameLevel {
 
   bool get awardsAchievement => achievementIdAndroid != null;
 
-  const GameLevel({
+  const Team({
     required this.number,
     required this.difficulty,
     this.achievementIdIOS,

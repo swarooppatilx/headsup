@@ -40,7 +40,7 @@ class LevelSelectionScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  for (final level in gameLevels)
+                  for (final level in teams)
                     ListTile(
                       enabled: playerProgress.highestLevelReached >=
                           level.number - 1,

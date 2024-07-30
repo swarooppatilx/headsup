@@ -122,8 +122,8 @@ class MyApp extends StatelessWidget {
                     pageBuilder: (context, state) {
                       final levelNumber =
                           int.parse(state.pathParameters['level']!);
-                      final level = gameLevels
-                          .singleWhere((e) => e.number == levelNumber);
+                      final level =
+                          teams.singleWhere((e) => e.number == levelNumber);
                       return buildMyTransition<void>(
                         key: ValueKey('level'),
                         child: PlaySessionScreen(
