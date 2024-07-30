@@ -3,12 +3,12 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import this package for SystemChrome
 import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart' hide Level;
 import 'package:provider/provider.dart';
+import 'package:sensors_plus/sensors_plus.dart'; // Import the sensors_plus package
 
 import '../ads/ads_controller.dart';
 import '../audio/audio_controller.dart';
@@ -41,10 +41,62 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
 
   late DateTime _startOfPlay;
   int _currentWordIndex = 0;
+  int _corrctWords = 0;
   double _fontSize = 120;
 
   Timer? _timer;
   int _remainingSeconds = 90;
+
+  List<AccelerometerEvent> _accelerometerValues = [];
+  late StreamSubscription<AccelerometerEvent> _accelerometerSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _startOfPlay = DateTime.now();
+    _startTimer();
+
+    // Preload ad for the win screen.
+    final adsRemoved =
+        context.read<InAppPurchaseController?>()?.adRemoval.active ?? false;
+    if (!adsRemoved) {
+      final adsController = context.read<AdsController?>();
+      adsController?.preloadAd();
+    }
+
+    // Set preferred orientations to landscape only.
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+
+    // Subscribe to accelerometer events
+    // ignore: deprecated_member_use
+    _accelerometerSubscription = accelerometerEvents.listen((event) {
+      setState(() {
+        _accelerometerValues = [event];
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    // Cancel the timer if it's still running
+    _timer?.cancel();
+
+    // Cancel the accelerometer event subscription to prevent memory leaks
+    _accelerometerSubscription.cancel();
+
+    // Reset preferred orientations to allow both landscape and portrait.
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,16 +117,6 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
           backgroundColor: palette.backgroundPlaySession,
           body: Stack(
             children: [
-              // Align(
-              //   alignment: Alignment.centerRight,
-              //   child: InkResponse(
-              //     onTap: () => GoRouter.of(context).push('/settings'),
-              //     child: Image.asset(
-              //       'assets/images/settings.png',
-              //       semanticLabel: 'Settings',
-              //     ),
-              //   ),
-              // ),
               GestureDetector(
                 onTap: _nextWord,
                 child: Center(
@@ -82,12 +124,35 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                     builder: (context, constraints) {
                       return FittedBox(
                         fit: BoxFit.contain,
-                        child: Text(
-                          widget.level.words[_currentWordIndex],
-                          style: TextStyle(
-                            fontSize: _fontSize,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text(
+                              widget.level.words[_currentWordIndex],
+                              style: TextStyle(
+                                fontSize: _fontSize,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              'Accelerometer Data:',
+                              style: TextStyle(fontSize: 20),
+                            ),
+                            SizedBox(height: 10),
+                            if (_accelerometerValues.isNotEmpty)
+                              Text(
+                                'X: ${_accelerometerValues[0].x.toStringAsFixed(2)}, '
+                                'Y: ${_accelerometerValues[0].y.toStringAsFixed(2)}, '
+                                'Z: ${_accelerometerValues[0].z.toStringAsFixed(2)}',
+                                style: TextStyle(fontSize: 16),
+                              )
+                            else
+                              Text(
+                                'No data available',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                          ],
                         ),
                       );
                     },
@@ -105,8 +170,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                     ),
                     IconButton(
                       icon: Icon(Icons.remove),
-                      onPressed:
-                          _decreaseFontSize, // Disable the decrease button
+                      onPressed: _decreaseFontSize,
                     ),
                   ],
                 ),
@@ -119,8 +183,6 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                   child: Row(
                     children: const [
                       Icon(Icons.arrow_back),
-                      // SizedBox(width: 2),
-                      // Text('Exit'),
                     ],
                   ),
                 ),
@@ -192,44 +254,6 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
         _playerWon();
       }
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    _startOfPlay = DateTime.now();
-
-    _startTimer();
-
-    // Preload ad for the win screen.
-    final adsRemoved =
-        context.read<InAppPurchaseController?>()?.adRemoval.active ?? false;
-    if (!adsRemoved) {
-      final adsController = context.read<AdsController?>();
-      adsController?.preloadAd();
-    }
-
-    // Set preferred orientations to landscape only.
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-  }
-
-  @override
-  void dispose() {
-    // Cancel the timer if it's still running
-    _timer?.cancel();
-
-    // Reset preferred orientations to allow both landscape and portrait.
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    super.dispose();
   }
 
   Future<void> _playerWon() async {
