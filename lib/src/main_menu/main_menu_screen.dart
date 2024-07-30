@@ -9,7 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../audio/audio_controller.dart';
 import '../audio/sounds.dart';
-import '../games_services/games_services.dart';
+// import '../games_services/games_services.dart';
 // import '../settings/settings.dart';
 import '../style/palette.dart';
 import '../style/responsive_screen.dart';
@@ -20,7 +20,7 @@ class MainMenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.watch<Palette>();
-    final gamesServicesController = context.watch<GamesServicesController?>();
+    // final gamesServicesController = context.watch<GamesServicesController?>();
     // final settingsController = context.watch<SettingsController>();
     final audioController = context.watch<AudioController>();
 
@@ -35,93 +35,86 @@ class MainMenuScreen extends StatelessWidget {
               'HeadsUP ACM',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Permanent Marker',
-                fontSize: 80,
-                height: 1,
-              ),
+                  fontFamily: 'Permanent Marker',
+                  fontSize: 80,
+                  height: 1,
+                  color: Colors.white),
             ),
           ),
         ),
-        rectangularMenuArea: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FilledButton(
-              onPressed: () {
-                audioController.playSfx(SfxType.buttonTap);
-                GoRouter.of(context).go('/play');
-              },
-              child: const Text('Play'),
+        rectangularMenuArea: Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.blue[300],
+              borderRadius: BorderRadius.circular(30),
             ),
-            _gap,
-            if (gamesServicesController != null) ...[
-              _hideUntilReady(
-                ready: gamesServicesController.signedIn,
-                child: FilledButton(
-                  onPressed: () => gamesServicesController.showAchievements(),
-                  child: const Text('Achievements'),
+            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildButton(
+                  'Play',
+                  () {
+                    audioController.playSfx(SfxType.buttonTap);
+                    GoRouter.of(context).go('/play');
+                  },
                 ),
-              ),
-              _gap,
-              _hideUntilReady(
-                ready: gamesServicesController.signedIn,
-                child: FilledButton(
-                  onPressed: () => gamesServicesController.showLeaderboard(),
-                  child: const Text('Leaderboard'),
+                const SizedBox(height: 20),
+                _buildButton(
+                  'Settings',
+                  () => GoRouter.of(context).push('/settings'),
                 ),
-              ),
-              _gap,
-            ],
-            FilledButton(
-              onPressed: () => GoRouter.of(context).push('/settings'),
-              child: const Text('Settings'),
-            ),
-            // Padding(
-            //   padding: const EdgeInsets.only(top: 32),
-            //   child: ValueListenableBuilder<bool>(
-            //     valueListenable: settingsController.muted,
-            //     builder: (context, muted, child) {
-            //       return IconButton(
-            //         onPressed: () => settingsController.toggleMuted(),
-            //         icon: Icon(muted ? Icons.volume_off : Icons.volume_up),
-            //       );
-            //     },
-            //   ),
-            // ),
-            _gap,
-            _gap,
-            _gap,
-            _gap,
-            _gap,
-            _gap,
-            RichText(
-              text: TextSpan(
-                text: 'Made by ',
-                style: TextStyle(
-                    color: Colors.grey.shade100,
-                    fontSize: 16.0), // Set default text color and size
-                children: <TextSpan>[
-                  TextSpan(
-                    text: 'Aditya Godse',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16.0), // URL text color and size
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        launchUrl(Uri.parse('https://adimail.github.io'));
-                      },
-                  ),
-                  TextSpan(
-                    text: ' for ACM IOIT',
+                const SizedBox(height: 30),
+                RichText(
+                  text: TextSpan(
+                    text: 'Made by ',
                     style: TextStyle(
                         color: Colors.grey.shade100,
-                        fontSize: 16.0), // Default text color and size
+                        fontSize: 16.0), // Set default text color and size
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: 'Aditya Godse',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.0), // URL text color and size
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            launchUrl(Uri.parse('https://adimail.github.io'));
+                          },
+                      ),
+                      TextSpan(
+                        text: ' for ACM IOIT',
+                        style: TextStyle(
+                            color: Colors.grey.shade100,
+                            fontSize: 16.0), // Default text color and size
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
 
-            _gap,
-          ],
+  Widget _buildButton(String text, VoidCallback onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          iconColor: Colors.teal,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 24),
         ),
       ),
     );
@@ -149,6 +142,4 @@ class MainMenuScreen extends StatelessWidget {
       },
     );
   }
-
-  static const _gap = SizedBox(height: 10);
 }
