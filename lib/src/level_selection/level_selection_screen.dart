@@ -52,7 +52,7 @@ class LevelSelectionScreen extends StatelessWidget {
                             .go('/play/session/${level.number}');
                       },
                       leading: Text(level.number.toString()),
-                      title: Text('Team #${level.number}'),
+                      title: Text('Team ${level.number}'),
                     )
                 ],
               ),
