@@ -41,6 +41,8 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   bool _duringCelebration = false;
 
   late DateTime _startOfPlay;
+  int _currentWordIndex = 0;
+  double _fontSize = 120;
 
   @override
   Widget build(BuildContext context) {
@@ -61,53 +63,53 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
           backgroundColor: palette.backgroundPlaySession,
           body: Stack(
             children: [
-              Center(
-                // This is the entirety of the "game".
+              // Align(
+              //   alignment: Alignment.centerRight,
+              //   child: InkResponse(
+              //     onTap: () => GoRouter.of(context).push('/settings'),
+              //     child: Image.asset(
+              //       'assets/images/settings.png',
+              //       semanticLabel: 'Settings',
+              //     ),
+              //   ),
+              // ),
+              GestureDetector(
+                onTap: _nextWord,
+                child: Center(
+                  child: Text(
+                    widget.level.words[_currentWordIndex],
+                    style: TextStyle(fontSize: _fontSize),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 16,
+                right: 16,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Align(
-                    //   alignment: Alignment.centerRight,
-                    //   child: InkResponse(
-                    //     onTap: () => GoRouter.of(context).push('/settings'),
-                    //     child: Image.asset(
-                    //       'assets/images/settings.png',
-                    //       semanticLabel: 'Settings',
-                    //     ),
-                    //   ),
-                    // ),
-                    const Spacer(),
-                    Row(
-                      children: widget.level.words
-                          .map((word) =>
-                              Text(word, style: TextStyle(fontSize: 24)))
-                          .toList(),
+                    IconButton(
+                      icon: Icon(Icons.add),
+                      onPressed: _increaseFontSize,
                     ),
-                    Text('Drag the slider to ${widget.level.difficulty}%'
-                        ' or above!'),
-                    Consumer<LevelState>(
-                      builder: (context, levelState, child) => Slider(
-                        label: 'Level Progress',
-                        autofocus: true,
-                        value: levelState.progress / 100,
-                        onChanged: (value) =>
-                            levelState.setProgress((value * 100).round()),
-                        onChangeEnd: (value) => levelState.evaluate(),
-                      ),
+                    IconButton(
+                      icon: Icon(Icons.remove),
+                      onPressed: _decreaseFontSize,
                     ),
-                    const Spacer(),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: () => GoRouter.of(context).go('/play'),
-                          child: const Text('Back'),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
                   ],
+                ),
+              ),
+              Positioned(
+                bottom: 16,
+                left: 16,
+                child: FilledButton(
+                  onPressed: () => GoRouter.of(context).go('/play'),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.arrow_back),
+                      SizedBox(width: 8),
+                      Text('Exit'),
+                    ],
+                  ),
                 ),
               ),
               SizedBox.expand(
@@ -125,6 +127,28 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
         ),
       ),
     );
+  }
+
+  void _nextWord() {
+    if (_currentWordIndex < widget.level.words.length - 1) {
+      setState(() {
+        _currentWordIndex++;
+      });
+    } else {
+      _playerWon();
+    }
+  }
+
+  void _increaseFontSize() {
+    setState(() {
+      _fontSize += 5;
+    });
+  }
+
+  void _decreaseFontSize() {
+    setState(() {
+      _fontSize = _fontSize > 5 ? _fontSize - 5 : _fontSize;
+    });
   }
 
   @override
