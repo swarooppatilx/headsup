@@ -1,7 +1,3 @@
-// Copyright 2022, the Flutter project authors. Please see the AUTHORS file
-// for details. All rights reserved. Use of this source code is governed by a
-// BSD-style license that can be found in the LICENSE file.
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import this package for SystemChrome
@@ -47,6 +43,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   Timer? _timer;
   int _remainingSeconds = 90;
 
+  // ignore: unused_field
   List<AccelerometerEvent> _accelerometerValues = [];
   late StreamSubscription<AccelerometerEvent> _accelerometerSubscription;
 
@@ -73,10 +70,24 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
 
     // Subscribe to accelerometer events
     // ignore: deprecated_member_use
-    _accelerometerSubscription = accelerometerEvents.listen((event) {
-      setState(() {
-        _accelerometerValues = [event];
-      });
+    bool _actionInProgress = false;
+
+// Subscribe to accelerometer events
+// ignore: deprecated_member_use
+    _accelerometerSubscription = accelerometerEvents.listen((event) async {
+      if (!_actionInProgress) {
+        if (event.z > 8) {
+          _nextWord();
+          _actionInProgress = true;
+          await Future.delayed(Duration(seconds: 1));
+          _actionInProgress = false;
+        } else if (event.z < -7) {
+          _nextWordAndCount();
+          _actionInProgress = true;
+          await Future.delayed(Duration(seconds: 1));
+          _actionInProgress = false;
+        }
+      }
     });
   }
 
@@ -134,24 +145,25 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            Text('Correct words: $_corrctWords'),
                             SizedBox(height: 20),
-                            Text(
-                              'Accelerometer Data:',
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            SizedBox(height: 10),
-                            if (_accelerometerValues.isNotEmpty)
-                              Text(
-                                'X: ${_accelerometerValues[0].x.toStringAsFixed(2)}, '
-                                'Y: ${_accelerometerValues[0].y.toStringAsFixed(2)}, '
-                                'Z: ${_accelerometerValues[0].z.toStringAsFixed(2)}',
-                                style: TextStyle(fontSize: 16),
-                              )
-                            else
-                              Text(
-                                'No data available',
-                                style: TextStyle(fontSize: 16),
-                              ),
+                            // Text(
+                            //   'Accelerometer Data:',
+                            //   style: TextStyle(fontSize: 20),
+                            // ),
+                            // SizedBox(height: 10),
+                            // if (_accelerometerValues.isNotEmpty)
+                            //   Text(
+                            //     'X: ${_accelerometerValues[0].x.toStringAsFixed(2)}, '
+                            //     'Y: ${_accelerometerValues[0].y.toStringAsFixed(2)}, '
+                            //     'Z: ${_accelerometerValues[0].z.toStringAsFixed(2)}',
+                            //     style: TextStyle(fontSize: 16),
+                            //   )
+                            // else
+                            //   Text(
+                            //     'No data available',
+                            //     style: TextStyle(fontSize: 16),
+                            //   ),
                           ],
                         ),
                       );
@@ -219,6 +231,17 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
     if (_currentWordIndex < widget.level.words.length - 1) {
       setState(() {
         _currentWordIndex++;
+      });
+    } else {
+      _playerWon();
+    }
+  }
+
+  void _nextWordAndCount() {
+    if (_currentWordIndex < widget.level.words.length - 1) {
+      setState(() {
+        _currentWordIndex++;
+        _corrctWords++;
       });
     } else {
       _playerWon();
