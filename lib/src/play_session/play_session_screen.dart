@@ -77,6 +77,12 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                     //   ),
                     // ),
                     const Spacer(),
+                    Row(
+                      children: widget.level.words
+                          .map((word) =>
+                              Text(word, style: TextStyle(fontSize: 24)))
+                          .toList(),
+                    ),
                     Text('Drag the slider to ${widget.level.difficulty}%'
                         ' or above!'),
                     Consumer<LevelState>(
@@ -100,7 +106,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 20)
+                    SizedBox(height: 20),
                   ],
                 ),
               ),
