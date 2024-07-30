@@ -51,6 +51,10 @@ List<String> soundTypeToFilename(SfxType type) {
       return const [
         'wrong.mp3',
       ];
+    case SfxType.over:
+      return const [
+        'gameover.wav',
+      ];
   }
 }
 
@@ -68,6 +72,8 @@ double soundTypeToVolume(SfxType type) {
       return 1.0;
     case SfxType.wrong:
       return 1.0;
+    case SfxType.over:
+      return 1.0;
     case SfxType.swishSwish:
       return 1.0;
   }
@@ -82,4 +88,5 @@ enum SfxType {
   swishSwish,
   correct,
   wrong,
+  over,
 }
