@@ -35,7 +35,6 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   static final _log = Logger('PlaySessionScreen');
 
   static const _celebrationDuration = Duration(milliseconds: 2000);
-
   static const _preCelebrationDuration = Duration(milliseconds: 500);
 
   bool _duringCelebration = false;
@@ -43,6 +42,9 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   late DateTime _startOfPlay;
   int _currentWordIndex = 0;
   double _fontSize = 120;
+
+  Timer? _timer;
+  int _remainingSeconds = 90;
 
   @override
   Widget build(BuildContext context) {
@@ -76,9 +78,19 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
               GestureDetector(
                 onTap: _nextWord,
                 child: Center(
-                  child: Text(
-                    widget.level.words[_currentWordIndex],
-                    style: TextStyle(fontSize: _fontSize),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return FittedBox(
+                        fit: BoxFit.contain,
+                        child: Text(
+                          widget.level.words[_currentWordIndex],
+                          style: TextStyle(
+                            fontSize: _fontSize,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -93,7 +105,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                     ),
                     IconButton(
                       icon: Icon(Icons.remove),
-                      onPressed: _decreaseFontSize,
+                      onPressed: null, // Disable the decrease button
                     ),
                   ],
                 ),
@@ -109,6 +121,17 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                       SizedBox(width: 8),
                       Text('Exit'),
                     ],
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 16,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Text(
+                    'Time Remaining: ${_formatTime(_remainingSeconds)}',
+                    style: TextStyle(fontSize: 24),
                   ),
                 ),
               ),
@@ -145,9 +168,22 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
     });
   }
 
-  void _decreaseFontSize() {
-    setState(() {
-      _fontSize = _fontSize > 5 ? _fontSize - 5 : _fontSize;
+  String _formatTime(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        setState(() {
+          _remainingSeconds--;
+        });
+      } else {
+        timer.cancel();
+        _playerWon();
+      }
     });
   }
 
@@ -156,6 +192,8 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
     super.initState();
 
     _startOfPlay = DateTime.now();
+
+    _startTimer();
 
     // Preload ad for the win screen.
     final adsRemoved =
@@ -174,6 +212,9 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
 
   @override
   void dispose() {
+    // Cancel the timer if it's still running
+    _timer?.cancel();
+
     // Reset preferred orientations to allow both landscape and portrait.
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
