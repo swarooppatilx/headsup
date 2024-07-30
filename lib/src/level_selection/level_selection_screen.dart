@@ -27,8 +27,7 @@ class LevelSelectionScreen extends StatelessWidget {
               child: Center(
                 child: Text(
                   'New Game',
-                  style:
-                      TextStyle(fontFamily: 'Permanent Marker', fontSize: 30),
+                  style: TextStyle(fontFamily: 'Exo 2', fontSize: 30),
                 ),
               ),
             ),

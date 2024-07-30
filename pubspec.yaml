@@ -49,6 +49,9 @@ flutter:
     - family: Permanent Marker
       fonts:
         - asset: assets/Permanent_Marker/PermanentMarker-Regular.ttf
+    - family: Exo 2
+      fonts:
+        - asset: assets/Exo_2/Exo2-Italic-VariableFont_wght.ttf
 
 flutter_icons:
   android: true
