@@ -232,6 +232,8 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
       setState(() {
         _currentWordIndex++;
       });
+      final audioController = context.read<AudioController>();
+      audioController.playSfx(SfxType.wrong);
     } else {
       _playerWon();
     }
@@ -243,6 +245,9 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
         _currentWordIndex++;
         _corrctWords++;
       });
+
+      final audioController = context.read<AudioController>();
+      audioController.playSfx(SfxType.correct);
     } else {
       _playerWon();
     }
@@ -284,7 +289,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
 
     final score = Score(
       widget.level.number,
-      widget.level.difficulty,
+      _corrctWords,
       DateTime.now().difference(_startOfPlay),
     );
 
@@ -299,8 +304,8 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
       _duringCelebration = true;
     });
 
-    final audioController = context.read<AudioController>();
-    audioController.playSfx(SfxType.congrats);
+    // final audioController = context.read<AudioController>();
+    // audioController.playSfx(SfxType.congrats);
 
     final gamesServicesController = context.read<GamesServicesController?>();
     if (gamesServicesController != null) {

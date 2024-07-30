@@ -45,11 +45,11 @@ List<String> soundTypeToFilename(SfxType type) {
       ];
     case SfxType.correct:
       return const [
-        'buzzer/correct.mp3',
+        'correct.mp3',
       ];
     case SfxType.wrong:
       return const [
-        'buzzer/wrong.mp3',
+        'wrong.mp3',
       ];
   }
 }
