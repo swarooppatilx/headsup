@@ -29,6 +29,7 @@ dependencies:
   google_mobile_ads: ^5.0.0 # Ads
   in_app_purchase: ^3.0.1 # In-app purchases
   url_launcher: ^6.3.0
+  sensors_plus: ^6.0.0
 
 dev_dependencies:
   flutter_lints: ^4.0.0
