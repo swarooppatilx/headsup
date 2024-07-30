@@ -43,6 +43,14 @@ List<String> soundTypeToFilename(SfxType type) {
       return const [
         'swishswish1.mp3',
       ];
+    case SfxType.correct:
+      return const [
+        'buzzer/correct.mp3',
+      ];
+    case SfxType.wrong:
+      return const [
+        'buzzer/wrong.mp3',
+      ];
   }
 }
 
@@ -56,6 +64,10 @@ double soundTypeToVolume(SfxType type) {
     case SfxType.buttonTap:
     case SfxType.congrats:
     case SfxType.erase:
+    case SfxType.correct:
+      return 1.0;
+    case SfxType.wrong:
+      return 1.0;
     case SfxType.swishSwish:
       return 1.0;
   }
@@ -68,4 +80,6 @@ enum SfxType {
   congrats,
   erase,
   swishSwish,
+  correct,
+  wrong,
 }
