@@ -36,7 +36,7 @@ class MainMenuScreen extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Permanent Marker',
-                fontSize: 60,
+                fontSize: 80,
                 height: 1,
               ),
             ),

@@ -112,26 +112,26 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                 ),
               ),
               Positioned(
-                bottom: 16,
+                top: 30,
                 left: 16,
                 child: FilledButton(
                   onPressed: () => GoRouter.of(context).go('/play'),
                   child: Row(
                     children: const [
                       Icon(Icons.arrow_back),
-                      SizedBox(width: 8),
-                      Text('Exit'),
+                      // SizedBox(width: 2),
+                      // Text('Exit'),
                     ],
                   ),
                 ),
               ),
               Positioned(
-                bottom: 16,
+                bottom: 30,
                 left: 0,
                 right: 0,
                 child: Center(
                   child: Text(
-                    'Time Remaining: ${_formatTime(_remainingSeconds)}',
+                    _formatTime(_remainingSeconds),
                     style: TextStyle(fontSize: 24),
                   ),
                 ),
