@@ -105,7 +105,8 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                     ),
                     IconButton(
                       icon: Icon(Icons.remove),
-                      onPressed: null, // Disable the decrease button
+                      onPressed:
+                          _decreaseFontSize, // Disable the decrease button
                     ),
                   ],
                 ),
@@ -164,7 +165,13 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
 
   void _increaseFontSize() {
     setState(() {
-      _fontSize += 5;
+      _fontSize += 10;
+    });
+  }
+
+  void _decreaseFontSize() {
+    setState(() {
+      _fontSize = _fontSize > 2 ? _fontSize - 10 : _fontSize;
     });
   }
 
