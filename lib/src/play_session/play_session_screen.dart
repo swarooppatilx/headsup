@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import this package for SystemChrome
 import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart' hide Level;
 import 'package:provider/provider.dart';
@@ -133,6 +134,24 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
       final adsController = context.read<AdsController?>();
       adsController?.preloadAd();
     }
+
+    // Set preferred orientations to landscape only.
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    // Reset preferred orientations to allow both landscape and portrait.
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    super.dispose();
   }
 
   Future<void> _playerWon() async {
@@ -172,7 +191,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
       await gamesServicesController.submitLeaderboardScore(score);
     }
 
-    /// Give the player some time to see the celebration animation.
+    // Give the player some time to see the celebration animation.
     await Future<void>.delayed(_celebrationDuration);
     if (!mounted) return;
 
