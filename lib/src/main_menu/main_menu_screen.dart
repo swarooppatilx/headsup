@@ -5,7 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../audio/audio_controller.dart';
 import '../audio/sounds.dart';
 import '../games_services/games_services.dart';
@@ -92,9 +93,33 @@ class MainMenuScreen extends StatelessWidget {
             _gap,
             _gap,
             _gap,
-            const Text(
-              'Made by Aditya Godse for ACM IOIT',
+            RichText(
+              text: TextSpan(
+                text: 'Made by ',
+                style: TextStyle(
+                    color: Colors.grey.shade100,
+                    fontSize: 16.0), // Set default text color and size
+                children: <TextSpan>[
+                  TextSpan(
+                    text: 'Aditya Godse',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16.0), // URL text color and size
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        launchUrl(Uri.parse('https://adimail.github.io'));
+                      },
+                  ),
+                  TextSpan(
+                    text: ' for ACM IOIT',
+                    style: TextStyle(
+                        color: Colors.grey.shade100,
+                        fontSize: 16.0), // Default text color and size
+                  ),
+                ],
+              ),
             ),
+
             _gap,
           ],
         ),
