@@ -18,6 +18,18 @@ const teams = [
       achievementIdIOS: 'finished',
       achievementIdAndroid: 'CdfIhE96aspNWLGSQg',
       words: ['example', 'words', 'for', 'team', '2']),
+  Team(
+      number: 3,
+      difficulty: 100,
+      achievementIdIOS: 'finished',
+      achievementIdAndroid: 'CdfIhE96aspNWLGSQg',
+      words: ['example', 'words', 'for', 'team', '2']),
+  Team(
+      number: 4,
+      difficulty: 100,
+      achievementIdIOS: 'finished',
+      achievementIdAndroid: 'CdfIhE96aspNWLGSQg',
+      words: ['example', 'words', 'for', 'team', '2']),
 ];
 
 class Team {
