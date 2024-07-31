@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import this package for SystemChrome
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart' hide Level;
 import 'package:provider/provider.dart';
-import 'package:sensors_plus/sensors_plus.dart'; // Import the sensors_plus package
+import 'package:sensors_plus/sensors_plus.dart';
 
 import '../ads/ads_controller.dart';
 import '../audio/audio_controller.dart';
@@ -34,6 +34,8 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   static const _preCelebrationDuration = Duration(milliseconds: 500);
 
   bool _duringCelebration = false;
+  bool _countdownActive = true;
+  int _countdownSeconds = 5;
 
   late DateTime _startOfPlay;
   int _currentWordIndex = 0;
@@ -51,8 +53,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   void initState() {
     super.initState();
 
-    _startOfPlay = DateTime.now();
-    _startTimer();
+    _startCountdown();
 
     // Preload ad for the win screen.
     final adsRemoved =
@@ -67,13 +68,45 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+  }
 
-    // Subscribe to accelerometer events
-    // ignore: deprecated_member_use
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _accelerometerSubscription.cancel();
+
+    // Reset preferred orientations to allow both landscape and portrait.
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    super.dispose();
+  }
+
+  void _startCountdown() {
+    Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_countdownSeconds > 0) {
+        setState(() {
+          _countdownSeconds--;
+        });
+      } else {
+        timer.cancel();
+        setState(() {
+          _countdownActive = false;
+        });
+        _startOfPlay = DateTime.now();
+        _startTimer();
+        _startAccelerometer();
+      }
+    });
+  }
+
+  void _startAccelerometer() {
     bool actionInProgress = false;
 
-// Subscribe to accelerometer events
-// ignore: deprecated_member_use
+    // ignore: deprecated_member_use
     _accelerometerSubscription = accelerometerEvents.listen((event) async {
       if (!actionInProgress) {
         if (event.z > 8) {
@@ -92,24 +125,6 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   }
 
   @override
-  void dispose() {
-    // Cancel the timer if it's still running
-    _timer?.cancel();
-
-    // Cancel the accelerometer event subscription to prevent memory leaks
-    _accelerometerSubscription.cancel();
-
-    // Reset preferred orientations to allow both landscape and portrait.
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final palette = context.watch<Palette>();
 
@@ -123,7 +138,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
         ),
       ],
       child: IgnorePointer(
-        ignoring: _duringCelebration,
+        ignoring: _duringCelebration || _countdownActive,
         child: Scaffold(
           backgroundColor: palette.backgroundPlaySession,
           body: Stack(
@@ -138,32 +153,29 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            Text(
-                              widget.level.words[_currentWordIndex],
-                              style: TextStyle(
-                                fontSize: _fontSize,
-                                fontWeight: FontWeight.bold,
+                            if (_countdownActive)
+                              Center(
+                                child: Text(
+                                  _countdownSeconds.toString(),
+                                  style: TextStyle(
+                                    fontSize: 100,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                            else
+                              Text(
+                                widget.level.words[_currentWordIndex],
+                                style: TextStyle(
+                                  fontSize: _fontSize,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            Text('Correct words: $_corrctWords'),
-                            SizedBox(height: 20),
-                            // Text(
-                            //   'Accelerometer Data:',
-                            //   style: TextStyle(fontSize: 20),
-                            // ),
-                            // SizedBox(height: 10),
-                            // if (_accelerometerValues.isNotEmpty)
-                            //   Text(
-                            //     'X: ${_accelerometerValues[0].x.toStringAsFixed(2)}, '
-                            //     'Y: ${_accelerometerValues[0].y.toStringAsFixed(2)}, '
-                            //     'Z: ${_accelerometerValues[0].z.toStringAsFixed(2)}',
-                            //     style: TextStyle(fontSize: 16),
-                            //   )
-                            // else
-                            //   Text(
-                            //     'No data available',
-                            //     style: TextStyle(fontSize: 16),
-                            //   ),
+                            if (!_countdownActive) ...[
+                              Text('Correct words: $_corrctWords'),
+                              SizedBox(height: 20),
+                            ],
                           ],
                         ),
                       );
@@ -296,7 +308,6 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
     final playerProgress = context.read<PlayerProgress>();
     playerProgress.setLevelReached(widget.level.number);
 
-    // Let the player see the game just after winning for a bit.
     await Future<void>.delayed(_preCelebrationDuration);
     if (!mounted) return;
 
@@ -309,7 +320,6 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
 
     final gamesServicesController = context.read<GamesServicesController?>();
     if (gamesServicesController != null) {
-      // Award achievement.
       if (widget.level.awardsAchievement) {
         await gamesServicesController.awardAchievement(
           android: widget.level.achievementIdAndroid!,
@@ -317,11 +327,9 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
         );
       }
 
-      // Send score to leaderboard.
       await gamesServicesController.submitLeaderboardScore(score);
     }
 
-    // Give the player some time to see the celebration animation.
     await Future<void>.delayed(_celebrationDuration);
     if (!mounted) return;
 
