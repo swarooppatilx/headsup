@@ -43,7 +43,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   double _fontSize = 120;
 
   Timer? _timer;
-  int _remainingSeconds = 90;
+  int _remainingSeconds = 45;
 
   // ignore: unused_field
   final List<AccelerometerEvent> _accelerometerValues = [];
