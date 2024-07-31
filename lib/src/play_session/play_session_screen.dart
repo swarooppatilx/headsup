@@ -44,7 +44,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   int _remainingSeconds = 90;
 
   // ignore: unused_field
-  List<AccelerometerEvent> _accelerometerValues = [];
+  final List<AccelerometerEvent> _accelerometerValues = [];
   late StreamSubscription<AccelerometerEvent> _accelerometerSubscription;
 
   @override
@@ -70,22 +70,22 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
 
     // Subscribe to accelerometer events
     // ignore: deprecated_member_use
-    bool _actionInProgress = false;
+    bool actionInProgress = false;
 
 // Subscribe to accelerometer events
 // ignore: deprecated_member_use
     _accelerometerSubscription = accelerometerEvents.listen((event) async {
-      if (!_actionInProgress) {
+      if (!actionInProgress) {
         if (event.z > 8) {
           _nextWord();
-          _actionInProgress = true;
+          actionInProgress = true;
           await Future.delayed(Duration(seconds: 1));
-          _actionInProgress = false;
+          actionInProgress = false;
         } else if (event.z < -7) {
           _nextWordAndCount();
-          _actionInProgress = true;
+          actionInProgress = true;
           await Future.delayed(Duration(seconds: 1));
-          _actionInProgress = false;
+          actionInProgress = false;
         }
       }
     });
