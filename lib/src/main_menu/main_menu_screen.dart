@@ -75,7 +75,7 @@ class MainMenuScreen extends StatelessWidget {
                     children: <TextSpan>[
                       TextSpan(
                         text: 'Aditya Godse',
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16.0), // URL text color and size
                         recognizer: TapGestureRecognizer()

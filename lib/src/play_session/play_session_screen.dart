@@ -40,30 +40,23 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   late DateTime _startOfPlay;
   int _currentWordIndex = 0;
   int _corrctWords = 0;
-  double _fontSize = 120;
 
   Timer? _timer;
   int _remainingSeconds = 90;
 
-  // ignore: unused_field
   final List<AccelerometerEvent> _accelerometerValues = [];
   late StreamSubscription<AccelerometerEvent> _accelerometerSubscription;
 
   @override
   void initState() {
     super.initState();
-
     _startCountdown();
 
-    // Preload ad for the win screen.
-    final adsRemoved =
-        context.read<InAppPurchaseController?>()?.adRemoval.active ?? false;
+    final adsRemoved = context.read<InAppPurchaseController?>()?.adRemoval.active ?? false;
     if (!adsRemoved) {
-      final adsController = context.read<AdsController?>();
-      adsController?.preloadAd();
+      context.read<AdsController?>()?.preloadAd();
     }
 
-    // Set preferred orientations to landscape only.
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
@@ -75,7 +68,6 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
     _timer?.cancel();
     _accelerometerSubscription.cancel();
 
-    // Reset preferred orientations to allow both landscape and portrait.
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -88,14 +80,10 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
   void _startCountdown() {
     Timer.periodic(Duration(seconds: 1), (timer) {
       if (_countdownSeconds > 0) {
-        setState(() {
-          _countdownSeconds--;
-        });
+        setState(() => _countdownSeconds--);
       } else {
         timer.cancel();
-        setState(() {
-          _countdownActive = false;
-        });
+        setState(() => _countdownActive = false);
         _startOfPlay = DateTime.now();
         _startTimer();
         _startAccelerometer();
@@ -105,8 +93,6 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
 
   void _startAccelerometer() {
     bool actionInProgress = false;
-
-    // ignore: deprecated_member_use
     _accelerometerSubscription = accelerometerEvents.listen((event) async {
       if (!actionInProgress) {
         if (event.z > 8) {
@@ -124,6 +110,30 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
     });
   }
 
+  int get _maxItems =>
+      [widget.level.imagePaths.length, widget.level.words.length].reduce((a, b) => a > b ? a : b);
+
+  void _nextWord() {
+    if (_currentWordIndex < _maxItems - 1) {
+      setState(() => _currentWordIndex++);
+      context.read<AudioController>().playSfx(SfxType.wrong);
+    } else {
+      _playerWon();
+    }
+  }
+
+  void _nextWordAndCount() {
+    if (_currentWordIndex < _maxItems - 1) {
+      setState(() {
+        _currentWordIndex++;
+        _corrctWords++;
+      });
+      context.read<AudioController>().playSfx(SfxType.correct);
+    } else {
+      _playerWon();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final palette = context.watch<Palette>();
@@ -131,10 +141,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (context) => LevelState(
-            goal: widget.level.difficulty,
-            onWin: _playerWon,
-          ),
+          create: (_) => LevelState(goal: widget.level.difficulty, onWin: _playerWon),
         ),
       ],
       child: IgnorePointer(
@@ -146,40 +153,77 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
               GestureDetector(
                 onTap: _nextWord,
                 child: Center(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return FittedBox(
-                        fit: BoxFit.contain,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            if (_countdownActive)
-                              Center(
-                                child: Text(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final hasImage = _currentWordIndex < widget.level.imagePaths.length;
+                        final hasWord = _currentWordIndex < widget.level.words.length;
+                        final wordText = hasWord ? widget.level.words[_currentWordIndex] : '';
+
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_countdownActive)
+                                Text(
                                   _countdownSeconds.toString(),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 100,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: Colors.red,
                                   ),
-                                ),
-                              )
-                            else
+                                )
+                              else if (!hasImage && hasWord)
+                              // Word-only layout (big and centered)
+                                Text(
+                                  wordText,
+                                  style: const TextStyle(
+                                    fontSize: 72,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                )
+                              else if (hasImage || hasWord)
+                                // Word + Image layout
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (hasImage)
+                                        Flexible(
+                                          child: Image.asset(
+                                            widget.level.imagePaths[_currentWordIndex],
+                                            fit: BoxFit.contain,
+                                            height: constraints.maxHeight * 0.4,
+                                          ),
+                                        ),
+                                      if (hasWord)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 16.0),
+                                          child: Text(
+                                            wordText,
+                                            style: const TextStyle(
+                                              fontSize: 30,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                              const SizedBox(height: 24),
                               Text(
-                                widget.level.words[_currentWordIndex],
-                                style: TextStyle(
-                                  fontSize: _fontSize,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                'Correct Guesses: $_corrctWords',
+                                style: const TextStyle(color: Colors.grey),
                               ),
-                            if (!_countdownActive) ...[
-                              Text('Correct words: $_corrctWords'),
-                              SizedBox(height: 20),
+                              const SizedBox(height: 20),
                             ],
-                          ],
-                        ),
-                      );
-                    },
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -189,12 +233,12 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                 child: Column(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.add),
-                      onPressed: _increaseFontSize,
+                      icon: const Icon(Icons.add),
+                      onPressed: () => setState(() {}),
                     ),
                     IconButton(
-                      icon: Icon(Icons.remove),
-                      onPressed: _decreaseFontSize,
+                      icon: const Icon(Icons.remove),
+                      onPressed: () => setState(() {}),
                     ),
                   ],
                 ),
@@ -204,11 +248,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                 left: 16,
                 child: FilledButton(
                   onPressed: () => GoRouter.of(context).go('/play'),
-                  child: Row(
-                    children: const [
-                      Icon(Icons.arrow_back),
-                    ],
-                  ),
+                  child: const Icon(Icons.arrow_back),
                 ),
               ),
               Positioned(
@@ -218,20 +258,14 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
                 child: Center(
                   child: Text(
                     _formatTime(_remainingSeconds),
-                    style: TextStyle(fontSize: 24),
+                    style: const TextStyle(fontSize: 24, color: Colors.red),
                   ),
                 ),
               ),
-              SizedBox.expand(
-                child: Visibility(
-                  visible: _duringCelebration,
-                  child: IgnorePointer(
-                    child: Confetti(
-                      isStopped: !_duringCelebration,
-                    ),
-                  ),
+              if (_duringCelebration)
+                const Positioned.fill(
+                  child: IgnorePointer(child: Confetti(isStopped: false)),
                 ),
-              ),
             ],
           ),
         ),
@@ -239,56 +273,16 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
     );
   }
 
-  void _nextWord() {
-    if (_currentWordIndex < widget.level.words.length - 1) {
-      setState(() {
-        _currentWordIndex++;
-      });
-      final audioController = context.read<AudioController>();
-      audioController.playSfx(SfxType.wrong);
-    } else {
-      _playerWon();
-    }
-  }
-
-  void _nextWordAndCount() {
-    if (_currentWordIndex < widget.level.words.length - 1) {
-      setState(() {
-        _currentWordIndex++;
-        _corrctWords++;
-      });
-
-      final audioController = context.read<AudioController>();
-      audioController.playSfx(SfxType.correct);
-    } else {
-      _playerWon();
-    }
-  }
-
-  void _increaseFontSize() {
-    setState(() {
-      _fontSize += 10;
-    });
-  }
-
-  void _decreaseFontSize() {
-    setState(() {
-      _fontSize = _fontSize > 2 ? _fontSize - 10 : _fontSize;
-    });
-  }
-
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;
-    final remainingSeconds = seconds % 60;
-    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
+    final remaining = seconds % 60;
+    return '$minutes:${remaining.toString().padLeft(2, '0')}';
   }
 
   void _startTimer() {
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
-        setState(() {
-          _remainingSeconds--;
-        });
+        setState(() => _remainingSeconds--);
       } else {
         timer.cancel();
         _playerWon();
@@ -305,32 +299,24 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
       DateTime.now().difference(_startOfPlay),
     );
 
-    final playerProgress = context.read<PlayerProgress>();
-    playerProgress.setLevelReached(widget.level.number);
+    context.read<PlayerProgress>().setLevelReached(widget.level.number);
 
-    await Future<void>.delayed(_preCelebrationDuration);
+    await Future.delayed(_preCelebrationDuration);
     if (!mounted) return;
 
-    setState(() {
-      _duringCelebration = true;
-    });
+    setState(() => _duringCelebration = true);
+    context.read<AudioController>().playSfx(SfxType.over);
 
-    final audioController = context.read<AudioController>();
-    audioController.playSfx(SfxType.over);
-
-    final gamesServicesController = context.read<GamesServicesController?>();
-    if (gamesServicesController != null) {
-      if (widget.level.awardsAchievement) {
-        await gamesServicesController.awardAchievement(
-          android: widget.level.achievementIdAndroid!,
-          iOS: widget.level.achievementIdIOS!,
-        );
-      }
-
-      await gamesServicesController.submitLeaderboardScore(score);
+    final gamesServices = context.read<GamesServicesController?>();
+    if (gamesServices != null && widget.level.awardsAchievement) {
+      await gamesServices.awardAchievement(
+        android: widget.level.achievementIdAndroid!,
+        iOS: widget.level.achievementIdIOS!,
+      );
+      await gamesServices.submitLeaderboardScore(score);
     }
 
-    await Future<void>.delayed(_celebrationDuration);
+    await Future.delayed(_celebrationDuration);
     if (!mounted) return;
 
     GoRouter.of(context).go('/play/won', extra: {'score': score});

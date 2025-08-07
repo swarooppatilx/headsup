@@ -37,8 +37,8 @@ class LevelSelectionScreen extends StatelessWidget {
                 children: [
                   for (final level in teams)
                     ListTile(
-                      enabled: playerProgress.highestLevelReached >=
-                          level.number - 1,
+                      enabled: true, //playerProgress.highestLevelReached >=
+                          //level.number - 1,
                       onTap: () {
                         final audioController = context.read<AudioController>();
                         audioController.playSfx(SfxType.buttonTap);
@@ -48,15 +48,16 @@ class LevelSelectionScreen extends StatelessWidget {
                       },
                       leading: Icon(
                         Icons.group,
-                        color: playerProgress.highestLevelReached >=
-                                level.number - 1
-                            ? Colors.white
-                            : Colors.grey,
+                        color: Colors.white,
+                        //playerProgress.highestLevelReached >=
+                                //level.number - 1
+                           // ? Colors.white
+                           // : Colors.grey,
                       ),
                       title: Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: const [
+                          gradient: const LinearGradient(
+                            colors: [
                               Color(0xFF5BA0C0),
                               Color(0xFF5BA0C0),
                             ],
@@ -133,7 +134,7 @@ class ImprovedContainer extends StatelessWidget {
             color: Colors.black.withOpacity(0.2),
             spreadRadius: 2,
             blurRadius: 10,
-            offset: Offset(0, 5), // changes position of shadow
+            offset: const Offset(0, 5), // changes position of shadow
           ),
         ],
       ),
